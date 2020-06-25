@@ -64,7 +64,7 @@
             <ImageView
                 android:id="@+id/addProduce"
                 android:layout_width="0dp"
-                android:layout_height="match_parent"
+                android:layout_height="35dp"
                 android:layout_weight="20"
                 android:src="@drawable/ic_add_color"/>
         </LinearLayout>

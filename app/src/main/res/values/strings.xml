@@ -47,7 +47,8 @@
     <string name="no_account">Don\'t have an Account?</string>
     <string name="farm_name">Farm Name</string>
     <string name="animal_count">No of Animals</string>
-    <string name="info_text">(If you category doesn\'t appear, click the add icon on the navbar to add one)</string>
+    <string name="info_text">(If your category doesn\'t appear, click the add icon on the navbar to add one)</string>
+    <string name="confirm_info">Is this the correct image. If so please select Proceed or cancel to choose another image</string>
     <string name="_location">Location</string>
     <string name="category">Category</string>
     <string name="status">Status</string>
@@ -136,4 +137,5 @@
     <string name="morning_">Morning Qty (litres)</string>
     <string name="total_">Total Qty Produced (litres)</string>
     <string name="totalQty_msg">Today\'s remaining quantity is</string>
+    <string name="please_confirm">Please Confirm</string>
 </resources>

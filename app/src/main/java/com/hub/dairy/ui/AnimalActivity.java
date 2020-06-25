@@ -1,5 +1,6 @@
 package com.hub.dairy.ui;
 
+import android.app.Dialog;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -8,6 +9,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
 import android.webkit.MimeTypeMap;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -17,6 +19,7 @@ import android.widget.ProgressBar;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -51,8 +54,8 @@ import de.hdodenhof.circleimageview.CircleImageView;
 import static com.hub.dairy.helpers.Constants.ANIMALS;
 import static com.hub.dairy.helpers.Constants.AVAILABLE;
 import static com.hub.dairy.helpers.Constants.CATEGORIES;
-import static com.hub.dairy.helpers.Constants.LONG_DATE;
 import static com.hub.dairy.helpers.Constants.IMAGE_URL;
+import static com.hub.dairy.helpers.Constants.LONG_DATE;
 import static com.hub.dairy.helpers.Constants.UPLOADS;
 
 public class AnimalActivity extends AppCompatActivity implements CategoryDialog.CategoryInterface,
@@ -71,7 +74,6 @@ public class AnimalActivity extends AppCompatActivity implements CategoryDialog.
     private LinearLayout displayText;
     private StorageReference mStorageReference;
     private CollectionReference colRef, mCategoryRef;
-    private ProgressBar mProgress;
     private Uri imageUri;
     private Spinner mSpinner, mStatus;
     private List<Category> mCategories = new ArrayList<>();
@@ -150,6 +152,7 @@ public class AnimalActivity extends AppCompatActivity implements CategoryDialog.
     }
 
     private void loadSpinner(List<Category> categories) {
+        // TODO: 4/4/2020 spinner
         List<String> titles = new ArrayList<>();
         for (Category category : categories) {
             String title = category.getCategoryName();
@@ -224,12 +227,10 @@ public class AnimalActivity extends AppCompatActivity implements CategoryDialog.
     }
 
     private void saveInfo(String gender, String father, String mother) {
-        if (mDownloadUrl != null) {
-            doSaveInfo(mDownloadUrl, gender, father, mother);
-        } else {
+        if (mDownloadUrl == null) {
             mDownloadUrl = IMAGE_URL;
-            doSaveInfo(mDownloadUrl, gender, father, mother);
         }
+        doSaveInfo(mDownloadUrl, gender, father, mother);
     }
 
     private void doSaveInfo(String downloadUrl, String gender, String father, String mother) {
@@ -274,9 +275,9 @@ public class AnimalActivity extends AppCompatActivity implements CategoryDialog.
             try {
                 if (resultCode == RESULT_OK && result != null) {
                     imageUri = result.getUri();
-                    uploadImage();
                     mAnimalImage.setImageURI(imageUri);
                     displayText.setVisibility(View.GONE);
+                    confirmDialog();
                 } else {
                     assert result != null;
                     String error = result.getError().toString();
@@ -289,31 +290,58 @@ public class AnimalActivity extends AppCompatActivity implements CategoryDialog.
         }
     }
 
-    private void uploadImage() {
+    private void confirmDialog() {
+        Dialog dialog = new Dialog(this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.custom_alert);
+        initDialogViews(dialog);
+        dialog.show();
+    }
+
+    private void initDialogViews(Dialog dialog) {
+        TextView cancel = dialog.findViewById(R.id.cancel);
+        TextView proceed = dialog.findViewById(R.id.proceed);
+        ProgressBar uploadProgress = dialog.findViewById(R.id.uploadProgress);
+
+        proceed.setOnClickListener(v -> uploadImage(dialog, uploadProgress, cancel));
+        cancel.setOnClickListener(v -> {
+            imageUri = null;
+            mAnimalImage.setImageURI(null);
+            dialog.dismiss();
+        });
+    }
+
+    private void uploadImage(Dialog dialog, ProgressBar uploadProgress, TextView cancel) {
+        cancel.setEnabled(false);
+        uploadProgress.setVisibility(View.VISIBLE);
         if (imageUri != null) {
-            mProgress.setVisibility(View.VISIBLE);
             StorageReference fileRef = mStorageReference.child(animalId)
                     .child(System.currentTimeMillis() + "." + getFileExtension(imageUri));
             fileRef.putFile(imageUri).addOnProgressListener(taskSnapshot -> {
                 double progress = (100.0 * taskSnapshot.getBytesTransferred() /
                         taskSnapshot.getTotalByteCount());
-                mProgress.incrementProgressBy((int) progress);
-            }).addOnFailureListener(e -> Toast.makeText(this, e.getMessage(),
-                    Toast.LENGTH_SHORT).show())
-                    .addOnSuccessListener(taskSnapshot -> {
-                        mSaveInfo.setEnabled(false);
-                        fileRef.getDownloadUrl()
-                                .addOnSuccessListener(uri -> {
-                                    mSaveInfo.setEnabled(true);
-                                    mDownloadUrl = uri.toString();
-                                })
-                                .addOnFailureListener(e -> Toast.makeText(this,
-                                        e.getMessage(), Toast.LENGTH_SHORT).show());
-                        mProgress.setVisibility(View.GONE);
-                        Toast.makeText(this, "Image uploaded", Toast.LENGTH_SHORT).show();
+                uploadProgress.incrementProgressBy((int) progress);
+            }).addOnCompleteListener(task -> {
+                if (task.isSuccessful()) {
+                    fileRef.getDownloadUrl().addOnSuccessListener(uri -> {
+                        mDownloadUrl = uri.toString();
+                        uploadProgress.setVisibility(View.GONE);
+                        mSaveInfo.setEnabled(true);
+                        dialog.dismiss();
                     });
+                } else {
+                    uploadProgress.setVisibility(View.GONE);
+                    dialog.dismiss();
+                    Toast.makeText(this, "Please try again", Toast.LENGTH_SHORT).show();
+                }
+            }).addOnFailureListener(e -> {
+                uploadProgress.setVisibility(View.GONE);
+                dialog.dismiss();
+                Toast.makeText(this, "Something went wrong", Toast.LENGTH_SHORT).show();
+            });
         } else {
-            mProgress.setVisibility(View.GONE);
+            uploadProgress.setVisibility(View.GONE);
+            dialog.dismiss();
         }
     }
 
@@ -328,7 +356,6 @@ public class AnimalActivity extends AppCompatActivity implements CategoryDialog.
         mAnimalImage = findViewById(R.id.animalImage);
         displayText = findViewById(R.id.displayText);
         mSaveInfo = findViewById(R.id.btnSaveInfo);
-        mProgress = findViewById(R.id.uploadProgress);
         mSpinner = findViewById(R.id.categorySpinner);
         mStatus = findViewById(R.id.statusSpinner);
         inputName = findViewById(R.id.inputName);

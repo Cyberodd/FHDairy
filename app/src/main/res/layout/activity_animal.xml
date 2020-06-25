@@ -32,10 +32,10 @@
             android:orientation="vertical">
 
             <TextView
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/info_text"
-                android:gravity="center"
+                android:textAlignment="center"
                 android:padding="4dp"
                 android:textColor="@color/colorPrimary"
                 android:textAppearance="@style/TextAppearance.AppCompat.Small"/>
@@ -65,15 +65,6 @@
                 </RelativeLayout>
 
             </LinearLayout>
-
-            <ProgressBar
-                android:id="@+id/uploadProgress"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                style="@style/Widget.AppCompat.ProgressBar.Horizontal"
-                android:padding="8dp"
-                android:theme="@style/AppTheme.WhiteAccent"
-                android:visibility="gone"/>
 
             <include layout="@layout/animal_form_view" />
 
@@ -133,6 +124,7 @@
                 android:background="@drawable/buttons"
                 android:textColor="@android:color/white"
                 android:textAllCaps="true"
+                android:enabled="false"
                 android:layout_margin="20dp"/>
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

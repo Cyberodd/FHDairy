@@ -2,13 +2,17 @@ package com.hub.dairy.dialogs;
 
 import android.annotation.SuppressLint;
 import android.app.Dialog;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowManager;
+import android.webkit.MimeTypeMap;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -21,6 +25,8 @@ import com.bumptech.glide.Glide;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.SetOptions;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 import com.hub.dairy.R;
 import com.hub.dairy.models.Animal;
 
@@ -30,7 +36,9 @@ import java.util.Objects;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
+import static android.app.Activity.RESULT_OK;
 import static com.hub.dairy.helpers.Constants.ANIMALS;
+import static com.hub.dairy.helpers.Constants.UPLOADS;
 
 public class AnimalDialog extends AppCompatDialogFragment {
 
@@ -39,9 +47,14 @@ public class AnimalDialog extends AppCompatDialogFragment {
     private CircleImageView animalImg;
     private TextView txtUpdate;
     private Button btnUpdate;
+    private int IMAGE_REQUEST_CODE = 1002;
     private Animal mAnimal;
     private CollectionReference animalRef;
     private boolean isClicked = false;
+    private Uri imageUri;
+    private ProgressBar uploadProgress;
+    private String mDownloadUrl;
+    private StorageReference mStorageReference;
 
     @NonNull
     @Override
@@ -52,6 +65,7 @@ public class AnimalDialog extends AppCompatDialogFragment {
         View view = inflater.inflate(R.layout.animal_dialog, null);
 
         FirebaseFirestore database = FirebaseFirestore.getInstance();
+        mStorageReference = FirebaseStorage.getInstance().getReference(UPLOADS);
         animalRef = database.collection(ANIMALS);
 
         Bundle bundle = getArguments();
@@ -85,9 +99,54 @@ public class AnimalDialog extends AppCompatDialogFragment {
 
     private void openGallery() {
         if (isClicked) {
-            Toast.makeText(getContext(), "Opening gallery", Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent();
+            intent.setType("image/*");
+            intent.setAction(Intent.ACTION_GET_CONTENT);
+            startActivityForResult(intent, IMAGE_REQUEST_CODE);
         } else {
-            Toast.makeText(getContext(), "Update not clicked", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "Update button not clicked", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private String getFileExtension(Uri uri) {
+        return MimeTypeMap.getFileExtensionFromUrl(uri.toString());
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == IMAGE_REQUEST_CODE && resultCode == RESULT_OK && data != null) {
+            imageUri = data.getData();
+            animalImg.setImageURI(imageUri);
+            uploadImage();
+        }
+    }
+
+    private void uploadImage() {
+        uploadProgress.setVisibility(View.VISIBLE);
+        if (imageUri != null) {
+            StorageReference fileRef = mStorageReference.child(mAnimal.getAnimalId())
+                    .child(System.currentTimeMillis() + "." + getFileExtension(imageUri));
+            fileRef.putFile(imageUri).addOnProgressListener(taskSnapshot -> {
+                double progress = (100.0 * taskSnapshot.getBytesTransferred() /
+                        taskSnapshot.getTotalByteCount());
+                uploadProgress.incrementProgressBy((int) progress);
+            }).addOnCompleteListener(task -> {
+                if (task.isSuccessful()) {
+                    fileRef.getDownloadUrl().addOnSuccessListener(uri -> {
+                        mDownloadUrl = uri.toString();
+                        uploadProgress.setVisibility(View.GONE);
+                    });
+                } else {
+                    uploadProgress.setVisibility(View.GONE);
+                    Toast.makeText(requireActivity(), "Please try again", Toast.LENGTH_SHORT).show();
+                }
+            }).addOnFailureListener(e -> {
+                uploadProgress.setVisibility(View.GONE);
+                Toast.makeText(requireActivity(), "Something went wrong", Toast.LENGTH_SHORT).show();
+            });
+        } else {
+            uploadProgress.setVisibility(View.GONE);
         }
     }
 
@@ -126,6 +185,10 @@ public class AnimalDialog extends AppCompatDialogFragment {
             updateInfo.put("location", updateLoc);
             updateInfo.put("animalBreed", updateBreed);
 
+            if (mDownloadUrl != null) {
+                updateInfo.put("imageUrl", mDownloadUrl);
+            }
+
             animalRef.document(mAnimal.getAnimalId())
                     .set(updateInfo, SetOptions.merge()).addOnSuccessListener(aVoid -> {
                 name.setEnabled(false);
@@ -133,6 +196,7 @@ public class AnimalDialog extends AppCompatDialogFragment {
                 breed.setEnabled(false);
                 status.setEnabled(false);
                 btnUpdate.setVisibility(View.GONE);
+                isClicked = false;
                 Toast.makeText(getContext(), R.string.success_msg, Toast.LENGTH_SHORT).show();
             });
         }
@@ -150,6 +214,6 @@ public class AnimalDialog extends AppCompatDialogFragment {
         availability = view.findViewById(R.id.animalAvailability);
         btnUpdate = view.findViewById(R.id.btnUpdateInfo);
         txtUpdate = view.findViewById(R.id.txtUpdate);
+        uploadProgress = view.findViewById(R.id.uploadProgress);
     }
-
 }
