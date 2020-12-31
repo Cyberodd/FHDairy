@@ -126,9 +126,8 @@ public class ParentDialog extends AppCompatDialogFragment {
             String motherName = animal.getAnimalName();
             motherNames.add(motherName);
         }
-        ArrayAdapter<String> adapter =
-                new ArrayAdapter<>(Objects.requireNonNull(getContext()),
-                        android.R.layout.simple_spinner_item, motherNames);
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(
+                requireContext(), android.R.layout.simple_spinner_item, motherNames);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         motherSpinner.setPrompt(getString(R.string.select_a_category));
         motherSpinner.setAdapter(adapter);
@@ -141,8 +140,6 @@ public class ParentDialog extends AppCompatDialogFragment {
         fatherQuery.get().addOnSuccessListener(queryDocumentSnapshots -> {
             if (!queryDocumentSnapshots.isEmpty()) {
                 populateFatherSpinner(queryDocumentSnapshots.toObjects(Animal.class), fatherSpinner);
-            } else {
-                Log.d(TAG, "loadParents: No Animals available currently");
             }
         });
     }
@@ -162,9 +159,8 @@ public class ParentDialog extends AppCompatDialogFragment {
             String fatherName = animal.getAnimalName();
             fatherNames.add(fatherName);
         }
-        ArrayAdapter<String> adapter =
-                new ArrayAdapter<>(Objects.requireNonNull(getContext()),
-                        android.R.layout.simple_spinner_item, fatherNames);
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(
+                requireContext(), android.R.layout.simple_spinner_item, fatherNames);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         fatherSpinner.setPrompt(getString(R.string.select_a_category));
         fatherSpinner.setAdapter(adapter);

@@ -70,7 +70,7 @@ public class AnimalActivity extends AppCompatActivity implements CategoryDialog.
     private Button mSaveInfo;
     private RadioGroup mRadioGroup;
     private RadioButton mRdMale, mRdFemale;
-    private int IMAGE_REQUEST_CODE = 1001;
+    private final int IMAGE_REQUEST_CODE = 1001;
     private LinearLayout displayText;
     private StorageReference mStorageReference;
     private CollectionReference colRef, mCategoryRef;
@@ -366,22 +366,6 @@ public class AnimalActivity extends AppCompatActivity implements CategoryDialog.
     @Override
     public void notifyUpdate() {
         updateCategories();
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.animal_menu, menu);
-        return super.onCreateOptionsMenu(menu);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        if (item.getItemId() == R.id.action_add_category) {
-            openDialog();
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
     }
 
     @Override
