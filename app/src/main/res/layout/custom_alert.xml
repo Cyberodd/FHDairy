@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:layout_margin="16dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/please_confirm"
+        android:textColor="@color/colorPrimary"
+        android:textAlignment="center"
+        android:padding="16dp"
+        android:textAllCaps="true"
+        android:textStyle="bold"/>
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textAlignment="center"
+        android:padding="4dp"
+        android:textAppearance="@style/TextAppearance.AppCompat.Small"
+        android:text="@string/confirm_info"/>
+
+    <ProgressBar
+        android:id="@+id/uploadProgress"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+        android:theme="@style/AppTheme.WhiteAccent"
+        android:visibility="gone"
+        android:layout_margin="4dp"/>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="8dp"
+        android:layout_margin="8dp">
+        <TextView
+            android:id="@+id/cancel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/cancel"
+            android:textAllCaps="true"
+            android:textColor="@color/colorRed"/>
+        <TextView
+            android:id="@+id/proceed"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/proceed"
+            android:textAllCaps="true"
+            android:layout_alignParentEnd="true"
+            android:textColor="@color/colorAccent"/>
+    </RelativeLayout>
+
+</LinearLayout>
